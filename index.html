@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#059669" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="হিসাবখাতা" />
+  <title>হিসাবখাতা | HISABKHATA — Mobile App</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      font-family: 'Hind Siliguri', 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      overscroll-behavior-y: none;
+    }
+    .safe-bottom {
+      padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+    }
+  </style>
+</head>
+<body class="bg-[#f8faf9] text-slate-800 min-h-screen transition-colors duration-200" id="app-body">
+
+  <!-- Top Toast Notification -->
+  <div id="toast-container" class="fixed top-4 right-4 left-4 md:left-auto md:w-96 z-50 hidden">
+    <div id="toast-box" class="flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl shadow-lg bg-emerald-600 text-white text-sm font-medium">
+      <span id="toast-text">সফলভাবে সংরক্ষিত হয়েছে!</span>
+      <button type="button" id="toast-close-btn" class="p-1 rounded-lg hover:bg-white/20">✕</button>
+    </div>
+  </div>
+
+  <!-- Sticky Mobile App Bar -->
+  <header id="app-header" class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-emerald-100 px-4 py-3 flex items-center justify-between shadow-sm">
+    <div class="flex items-center gap-2.5">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-extrabold text-lg shadow-sm">
+        ৳
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base font-bold leading-tight text-emerald-700" id="header-title">হিসাবখাতা | HISABKHATA</h1>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Mobile App</span>
+        </div>
+        <p class="text-[11px] text-slate-500" id="header-date">আজ: 03 November 2026</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-1.5">
+      <button type="button" id="open-apk-modal-btn" class="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm flex items-center gap-1">
+        <span>📲</span>
+        <span>ইনস্টল / APK</span>
+      </button>
+      <button type="button" id="toggle-digit-btn" class="px-2.5 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs font-bold">
+        ৳35
+      </button>
+      <button type="button" id="toggle-theme-btn" class="p-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-xs" title="ডার্ক/লাইট মোড">
+        🌙
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="max-w-4xl mx-auto p-4 safe-bottom space-y-5">
+
+    <!-- Budget Alert Banner -->
+    <div id="budget-alert-banner" class="hidden p-4 rounded-2xl border flex items-center justify-between gap-3">
+      <div>
+        <h4 id="budget-alert-title" class="font-bold text-sm">সতর্কতা!</h4>
+        <p id="budget-alert-desc" class="text-xs mt-0.5"></p>
+      </div>
+      <button type="button" data-nav="settings" class="nav-jump-btn px-3 py-1.5 rounded-xl bg-white/90 text-slate-800 text-xs font-bold shrink-0">
+        বাজেট
+      </button>
+    </div>
+
+    <!-- ==================================================================
+         VIEW 1: হোম (DASHBOARD)
+    ================================================================== -->
+    <section id="view-home" class="space-y-5">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- A. Today's Expense -->
+        <div class="rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-5 shadow-md">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-white/15">আজকের খরচ (Today)</span>
+            <span class="text-xs text-emerald-100" id="dash-today-date">03 Nov 2026</span>
+          </div>
+          <div class="text-3xl font-extrabold mt-3" id="dash-today-total">৳0</div>
+          <div class="grid grid-cols-2 gap-2.5 mt-4 pt-3 border-t border-white/15 text-xs">
+            <div class="bg-white/10 rounded-xl p-2.5">
+              <div class="text-emerald-100 text-[11px]">আজকের লেনদেন</div>
+              <div class="font-bold text-sm mt-0.5" id="dash-today-count">0টি লেনদেন</div>
+            </div>
+            <div class="bg-white/10 rounded-xl p-2.5">
+              <div class="text-emerald-100 text-[11px]">গড় খরচ / লেনদেন</div>
+              <div class="font-bold text-sm mt-0.5" id="dash-today-avg">৳0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- B. This Month -->
+        <div class="rounded-3xl bg-white border border-emerald-100 p-5 shadow-sm card-surface">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700">এই মাসের খরচ (This Month)</span>
+            <span class="text-xs text-slate-400" id="dash-month-label">নভেম্বর ২০২৬</span>
+          </div>
+          <div class="text-3xl font-extrabold mt-3 text-emerald-700" id="dash-month-total">৳0</div>
+          <div class="grid grid-cols-2 gap-2.5 mt-4 pt-3 border-t border-slate-100 text-xs">
+            <div class="bg-emerald-50/60 rounded-xl p-2.5 sub-surface">
+              <div class="text-slate-500 text-[11px]">মোট লেনদেন</div>
+              <div class="font-bold text-sm mt-0.5" id="dash-month-count">0টি লেনদেন</div>
+            </div>
+            <div class="bg-emerald-50/60 rounded-xl p-2.5 sub-surface">
+              <div class="text-slate-500 text-[11px]">দৈনিক গড় খরচ</div>
+              <div class="font-bold text-sm mt-0.5 text-emerald-700" id="dash-month-avg">৳0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Extended Stats Row -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="p-3.5 rounded-2xl bg-white border border-emerald-100 shadow-sm card-surface">
+          <div class="text-[11px] text-slate-500">সাপ্তাহিক খরচ (৭ দিন)</div>
+          <div class="text-base font-bold mt-1" id="dash-weekly-total">৳0</div>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-white border border-emerald-100 shadow-sm card-surface">
+          <div class="text-[11px] text-slate-500">বার্ষিক খরচ</div>
+          <div class="text-base font-bold mt-1" id="dash-yearly-total">৳0</div>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-white border border-emerald-100 shadow-sm card-surface">
+          <div class="text-[11px] text-slate-500">সর্বোচ্চ খরচের দিন</div>
+          <div class="text-base font-bold mt-1 text-rose-600" id="dash-high-day">৳0</div>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-white border border-emerald-100 shadow-sm card-surface">
+          <div class="text-[11px] text-slate-500">সর্বনিম্ন খরচের দিন</div>
+          <div class="text-base font-bold mt-1 text-emerald-600" id="dash-low-day">৳0</div>
+        </div>
+      </div>
+
+      <!-- Monthly Budget Progress Card -->
+      <div id="dash-budget-card" class="p-4 rounded-2xl bg-white border border-emerald-100 shadow-sm card-surface">
+        <div class="flex items-center justify-between text-xs mb-2">
+          <span class="font-bold">মাসিক বাজেট ট্র্যাকার (Monthly Budget)</span>
+          <span id="dash-budget-percent" class="px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800">0% ব্যবহৃত</span>
+        </div>
+        <div class="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden">
+          <div id="dash-budget-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 0%"></div>
+        </div>
+        <div class="grid grid-cols-3 gap-2 mt-2.5 text-xs">
+          <div>বাজেট: <strong id="dash-budget-limit">৳10,000</strong></div>
+          <div class="text-center">খরচ: <strong id="dash-budget-spent" class="text-emerald-600">৳0</strong></div>
+          <div class="text-right">অবশিষ্ট: <strong id="dash-budget-rem">৳10,000</strong></div>
+        </div>
+      </div>
+
+      <!-- C. Quick Actions -->
+      <div class="grid grid-cols-3 gap-2.5">
+        <button type="button" data-nav="add" class="nav-jump-btn p-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold text-center shadow-sm">
+          ➕ হিসাব যোগ করুন
+        </button>
+        <button type="button" id="quick-today-history-btn" class="p-3.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 text-xs font-bold text-center">
+          📅 আজকের হিসাব
+        </button>
+        <button type="button" data-nav="reports" class="nav-jump-btn p-3.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 text-xs font-bold text-center">
+          📊 মাসিক রিপোর্ট
+        </button>
+      </div>
+
+      <!-- D. Recent Transactions -->
+      <div class="p-4 rounded-3xl bg-white border border-emerald-100 shadow-sm card-surface">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="text-sm font-bold">সাম্প্রতিক লেনদেন (Recent Transactions)</h3>
+            <p class="text-[11px] text-slate-400">সর্বশেষ সংরক্ষিত ১০টি খরচের হিসাব</p>
+          </div>
+          <button type="button" data-nav="history" class="nav-jump-btn text-xs font-bold text-emerald-600 hover:underline">
+            সব দেখুন →
+          </button>
+        </div>
+        <div id="recent-transactions-list" class="divide-y divide-slate-100"></div>
+      </div>
+    </section>
+
+    <!-- ==================================================================
+         VIEW 2: হিসাব যোগ করুন (ADD EXPENSE FORM)
+    ================================================================== -->
+    <section id="view-add" class="hidden space-y-5">
+      <div class="p-5 rounded-3xl bg-white border border-emerald-100 shadow-sm card-surface">
+        <h2 class="text-base font-bold mb-1">নতুন খরচের হিসাব যোগ করুন</h2>
+        <p class="text-xs text-slate-400 mb-4">সংরক্ষণ করার সাথে সাথে মোট হিসাব আপডেট হবে</p>
+
+        <!-- Quick Presets -->
+        <div class="mb-4">
+          <div class="text-xs font-semibold text-slate-500 mb-2">এক ক্লিকে দ্রুত পূরণ করুন:</div>
+          <div class="flex flex-wrap gap-1.5" id="preset-chips-container">
+            <button type="button" data-preset-title="কলম" data-preset-amt="5" data-preset-cat="শিক্ষা" class="preset-chip px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">কলম — ৳5</button>
+            <button type="button" data-preset-title="নাস্তা" data-preset-amt="30" data-preset-cat="খাবার" class="preset-chip px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">নাস্তা — ৳30</button>
+            <button type="button" data-preset-title="বাস ভাড়া" data-preset-amt="20" data-preset-cat="যাতায়াত" class="preset-chip px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">বাস ভাড়া — ৳20</button>
+            <button type="button" data-preset-title="চা" data-preset-amt="10" data-preset-cat="খাবার" class="preset-chip px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">চা — ৳10</button>
+            <button type="button" data-preset-title="খাতা" data-preset-amt="50" data-preset-cat="শিক্ষা" class="preset-chip px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">খাতা — ৳50</button>
+          </div>
+        </div>
+
+        <div id="add-form-error" class="hidden mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium"></div>
+
+        <form id="add-expense-form" class="space-y-4">
+          <input type="hidden" id="editing-expense-id" value="" />
+          <div>
+            <label for="input-amount" class="block text-xs font-bold mb-1">১. খরচের পরিমাণ (৳ BDT) *</label>
+            <input id="input-amount" type="text" inputmode="decimal" placeholder="যেমন: 5, 30, 50, 100" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 input-surface" />
+          </div>
+
+          <div>
+            <label for="input-title" class="block text-xs font-bold mb-1">২. খরচের নাম / বিবরণ *</label>
+            <input id="input-title" type="text" placeholder="যেমন: কলম, খাতা, নাস্তা, চা, বাস ভাড়া" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 input-surface" />
+          </div>
+
+          <div>
+            <label for="input-category" class="block text-xs font-bold mb-1">৩. ক্যাটাগরি নির্বাচন করুন *</label>
+            <select id="input-category" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 input-surface"></select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="input-date" class="block text-xs font-bold mb-1">৪. তারিখ</label>
+              <input id="input-date" type="date" class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-medium input-surface" />
+            </div>
+            <div>
+              <label for="input-time" class="block text-xs font-bold mb-1">৫. সময়</label>
+              <input id="input-time" type="time" class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-medium input-surface" />
+            </div>
+          </div>
+
+          <div>
+            <label for="input-note" class="block text-xs font-bold mb-1">৬. নোট / অতিরিক্ত তথ্য (ঐচ্ছিক)</label>
+            <input id="input-note" type="text" placeholder="অতিরিক্ত কোনো বিবরণ..." class="w-full px-4 py-2.5 rounded-2xl border border-slate-200 text-xs input-surface" />
+          </div>
+
+          <div class="flex gap-2">
+            <button type="button" id="cancel-edit-btn" class="hidden w-1/3 py-3.5 rounded-2xl border border-slate-300 text-xs font-bold">
+              বাতিল
+            </button>
+            <button type="submit" id="submit-expense-btn" class="flex-1 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md">
+              ✓ হিসাব সংরক্ষণ করুন (Save Expense)
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ==================================================================
+         VIEW 3: দৈনিক হিসাব (DAILY EXPENSE HISTORY)
+    ================================================================== -->
+    <section id="view-history" class="hidden space-y-4">
+      <div class="p-4 rounded-3xl bg-white border border-emerald-100 shadow-sm card-surface space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-base font-bold">দৈনিক হিসাব (Daily History)</h2>
+            <p class="text-[11px] text-slate-400">তারিখ অনুযায়ী সকল লেনদেন ও দৈনিক যোগফল</p>
+          </div>
+          <div class="text-right">
+            <div class="text-[11px] text-slate-400" id="history-total-count">0টি লেনদেন</div>
+            <div class="text-base font-extrabold text-emerald-700" id="history-total-amount">মোট: ৳0</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <input id="history-search" type="text" placeholder="খরচের নাম খুঁজুন..." class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs input-surface" />
+          <select id="history-cat-filter" class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs input-surface"></select>
+          <div class="flex gap-1.5">
+            <input id="history-date-filter" type="date" class="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-xs input-surface" />
+            <button type="button" id="history-reset-btn" class="px-3 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold">সব</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="daily-history-groups" class="space-y-4"></div>
+    </section>
+
+    <!-- ==================================================================
+         VIEW 4: রিপোর্ট (MONTHLY REPORT & CHARTS)
+    ================================================================== -->
+    <section id="view-reports" class="hidden space-y-4">
+      <div class="p-4 rounded-3xl bg-white border border-emerald-100 shadow-sm card-surface flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-base font-bold">মাসিক আর্থিক রিপোর্ট</h2>
+          <p class="text-[11px] text-slate-400">খাতওয়ারী পাই চার্ট, দৈনিক বার চার্ট ও ট্রেন্ড</p>
+        </div>
+        <input id="report-month-picker" type="month" class="px-3.5 py-2 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-900 text-xs font-bold" />
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="p-3.5 rounded-2xl bg-emerald-600 text-white">
+          <div class="text-[11px] text-emerald-100">মোট মাসিক খরচ</div>
+          <div class="text-lg font-extrabold mt-0.5" id="rep-total">৳0</div>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-white border border-emerald-100 card-surface">
+          <div class="text-[11px] text-slate-400">দৈনিক গড় খরচ</div>
+          <div class="text-lg font-bold mt-0.5 text-emerald-600" id="rep-avg">৳0</div>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-white border border-emerald-100 card-surface">
+          <div class="text-[11px] text-slate-400">সর্বোচ্চ খরচের দিন</div>
+          <div class="text-sm font-bold mt-0.5 text-rose-600" id="rep-high">৳0</div>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-white border border-emerald-100 card-surface">
+          <div class="text-[11px] text-slate-400">সর্বনিম্ন খরচের দিন</div>
+          <div class="text-sm font-bold mt-0.5 text-emerald-600" id="rep-low">৳0</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-4 rounded-3xl bg-white border border-emerald-100 shadow-sm card-surface">
+          <h3 class="text-xs font-bold mb-2">খাতওয়ারী খরচের পাই চার্ট (Pie Chart)</h3>
+          <div class="relative h-64 w-full">
+            <canvas id="pie-chart-canvas"></canvas>
+          </div>
+        </div>
+        <div class="p-4 rounded-3xl bg-white border border-emerald-100 shadow-sm card-surface">
+          <h3 class="text-xs font-bold mb-2">দৈনিক খরচের বার চার্ট (Bar Chart)</h3>
+          <div class="relative h-64 w-full">
+            <canvas id="bar-chart-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 rounded-3xl bg-white border border-emerald-100 shadow-sm card-surface">
+        <h3 class="text-xs font-bold mb-2">খরচের প্রবণতা (Expense Trend Line Chart)</h3>
+        <div class="relative h-60 w-full">
+          <canvas id="line-chart-canvas"></canvas>
+        </div>
+      </div>
+
+      <div class="p-4 rounded-3xl bg-white border border-emerald-100 shadow-sm card-surface">
+        <h3 class="text-xs font-bold mb-3">ক্যাটাগরি অনুযায়ী বিস্তারিত হিসাব</h3>
+        <div id="report-category-breakdown" class="space-y-2.5"></div>
+      </div>
+    </section>
+
+    <!-- ==================================================================
+         VIEW 5: সেটিংস (SETTINGS, CATEGORIES, BUDGET & BACKUP)
+    ================================================================== -->
+    <section id="view-settings" class="hidden space-y-5">
+      <!-- Budget Configuration -->
+      <div class="p-5 rounded-3xl bg-white border border-emerald-100 shadow-sm card-surface space-y-3">
+        <h3 class="text-sm font-bold">মাসিক বাজেট নির্ধারণ (Monthly Budget)</h3>
+        <form id="budget-form" class="flex gap-2">
+          <input id="budget-input" type="number" placeholder="10000" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold input-surface" />
+          <button type="submit" class="px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-bold">বাজেট সেভ করুন</button>
+        </form>
+      </div>
+
+      <!-- Custom Category Management -->
+      <div class="p-5 rounded-3xl bg-white border border-emerald-100 shadow-sm card-surface space-y-3">
+        <h3 class="text-sm font-bold">ক্যাটাগরি ব্যবস্থাপনা (Category Management)</h3>
+        <form id="add-category-form" class="flex gap-2">
+          <input id="new-category-name" type="text" placeholder="নতুন ক্যাটাগরির নাম..." class="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 text-xs input-surface" />
+          <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold">+ যোগ করুন</button>
+        </form>
+        <div id="settings-category-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+      </div>
+
+      <!-- Backup & Restore -->
+      <div class="p-5 rounded-3xl bg-white border border-emerald-100 shadow-sm card-surface space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold">ডেটা ব্যাকআপ ও রিস্টোর</h3>
+          <span id="settings-record-count" class="text-xs font-bold text-emerald-600">0টি রেকর্ড</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <button type="button" id="export-csv-btn" class="p-3 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-900 text-xs font-bold">
+            📄 CSV ডাউনলোড করুন
+          </button>
+          <button type="button" id="export-json-btn" class="p-3 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-900 text-xs font-bold">
+            💾 JSON ব্যাকআপ ডাউনলোড
+          </button>
+          <button type="button" id="import-json-btn" class="p-3 rounded-2xl border border-blue-200 bg-blue-50 text-blue-900 text-xs font-bold">
+            📂 JSON ব্যাকআপ ইমপোর্ট
+          </button>
+          <input id="import-json-file" type="file" accept=".json,application/json" class="hidden" />
+        </div>
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+          <span class="text-xs text-rose-600 font-semibold">সব ডেটা মুছে ফেলুন (Double Confirmation)</span>
+          <button type="button" id="clear-data-btn" class="px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-bold">
+            সব তথ্য মুছুন
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-emerald-100 shadow-lg">
+    <div class="max-w-4xl mx-auto grid grid-cols-5 py-1.5 px-1">
+      <button type="button" data-nav="home" class="nav-tab-btn flex flex-col items-center py-1 text-emerald-600 font-bold">
+        <span class="text-base">🏠</span>
+        <span class="text-[10px]">হোম</span>
+      </button>
+      <button type="button" data-nav="add" class="nav-tab-btn flex flex-col items-center py-1 text-slate-500">
+        <span class="text-base">➕</span>
+        <span class="text-[10px]">হিসাব যোগ</span>
+      </button>
+      <button type="button" data-nav="history" class="nav-tab-btn flex flex-col items-center py-1 text-slate-500">
+        <span class="text-base">📅</span>
+        <span class="text-[10px]">দৈনিক হিসাব</span>
+      </button>
+      <button type="button" data-nav="reports" class="nav-tab-btn flex flex-col items-center py-1 text-slate-500">
+        <span class="text-base">📊</span>
+        <span class="text-[10px]">রিপোর্ট</span>
+      </button>
+      <button type="button" data-nav="settings" class="nav-tab-btn flex flex-col items-center py-1 text-slate-500">
+        <span class="text-base">⚙️</span>
+        <span class="text-[10px]">সেটিংস</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-modal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-xl text-slate-800 space-y-4">
+      <h3 class="font-bold text-base" id="delete-modal-title">হিসাবটি মুছে ফেলবেন?</h3>
+      <p class="text-xs text-slate-500" id="delete-modal-desc"></p>
+      <div class="flex justify-end gap-2">
+        <button type="button" id="delete-cancel-btn" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold">বাতিল</button>
+        <button type="button" id="delete-confirm-btn" class="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold">হ্যাঁ, মুছে ফেলুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phone Install & APK Conversion Modal -->
+  <div id="apk-modal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl text-slate-800 space-y-4 max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-base text-emerald-700">📲 ফোনে সরাসরি ইনস্টল ও APK গাইড</h3>
+        <button type="button" id="close-apk-modal-btn" class="p-1.5 rounded-xl bg-slate-100 text-xs font-bold">✕</button>
+      </div>
+      <div class="space-y-3 text-xs leading-relaxed text-slate-600">
+        <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950">
+          <div class="font-bold text-sm mb-1">পদ্ধতি ১: সরাসরি ফোনে অ্যাপ হিসেবে ইনস্টল (সবচেয়ে সহজ)</div>
+          <p>১. এই <strong>HisabKhata_Mobile_App.html</strong> ফাইলটি আপনার ফোনে ডাউনলোড করে <strong>Chrome</strong> ব্রাউজারে খুলুন।</p>
+          <p class="mt-1">২. নিচের বাটনে ক্লিক করুন অথবা Chrome-এর ডানদিকের ৩-ডট (⋮) মেনু থেকে <strong>"Add to Home screen" / "Install app"</strong> চাপুন। এটি আপনার ফোনে আসল অ্যাপের মতো ফুল-স্ক্রিনে ও অফলাইনে চলবে!</p>
+          <button type="button" id="pwa-install-trigger-btn" class="mt-2.5 w-full py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-sm">
+            📲 হোম স্ক্রিনে ইনস্টল করুন (Install App)
+          </button>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-blue-50 border border-blue-200 text-blue-950">
+          <div class="font-bold text-sm mb-1">পদ্ধতি ২: ১ ক্লিকে .APK ফাইল তৈরি (৩০ সেকেন্ডে)</div>
+          <p>আপনি যদি সরাসরি <code>.apk</code> ফাইল চান, তবে ডাউনলোড করা <strong>HisabKhata_Mobile_App.html</strong> অথবা <strong>HisabKhata_Android_APK_Project.zip</strong> ফাইলটি নিচের যেকোনো ফ্রি টুলে আপলোড করে <strong>Build APK</strong> চাপুন:</p>
+          <ul class="list-disc list-inside mt-1 font-semibold space-y-0.5">
+            <li>WebIntoApp.com (HTML to APK)</li>
+            <li>AppsGeyser.com (ZIP/HTML to APK)</li>
+            <li>GitHub Actions (প্রদত্ত ZIP ফাইলে অটো-APK বিল্ডার যুক্ত আছে)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========================================================================
+    // HISABKHATA STANDALONE MOBILE ENGINE (IndexedDB + LocalStorage + Charts)
+    // ========================================================================
+    const DEFAULT_CATEGORIES = [
+      { id: 'cat-1', name: 'খাবার', color: '#10b981' },
+      { id: 'cat-2', name: 'যাতায়াত', color: '#3b82f6' },
+      { id: 'cat-3', name: 'শিক্ষা', color: '#8b5cf6' },
+      { id: 'cat-4', name: 'বাজার', color: '#f59e0b' },
+      { id: 'cat-5', name: 'ব্যক্তিগত খরচ', color: '#ec4899' },
+      { id: 'cat-6', name: 'মোবাইল ও ইন্টারনেট', color: '#06b6d4' },
+      { id: 'cat-7', name: 'বিনোদন', color: '#f97316' },
+      { id: 'cat-8', name: 'স্বাস্থ্য', color: '#ef4444' },
+      { id: 'cat-9', name: 'বাসা ভাড়া', color: '#6366f1' },
+      { id: 'cat-10', name: 'অন্যান্য', color: '#64748b' }
+    ];
+
+    const EN_BN = {'0':'০','1':'১','2':'২','3':'৩','4':'৪','5':'৫','6':'৬','7':'৭','8':'৮','9':'৯'};
+    const BN_EN = {'০':'0','১':'1','২':'2','৩':'3','৪':'4','৫':'5','৬':'6','৭':'7','৮':'8','৯':'9'};
+
+    let state = {
+      expenses: [],
+      categories: [...DEFAULT_CATEGORIES],
+      settings: { monthlyBudget: 10000, darkMode: false, useBengaliDigits: false },
+      activeView: 'home',
+      deletePendingAction: null,
+      clearStep: 0
+    };
+
+    let pieChartInst = null;
+    let barChartInst = null;
+    let lineChartInst = null;
+    let deferredInstallPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+    });
+
+    function getTodayISO() {
+      try {
+        const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
+        const y = parts.find(p => p.type === 'year')?.value;
+        const m = parts.find(p => p.type === 'month')?.value;
+        const d = parts.find(p => p.type === 'day')?.value;
+        if (y && m && d) return `${y}-${m}-${d}`;
+      } catch (err) {}
+      const n = new Date();
+      return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+    }
+
+    function getNowHHMM() {
+      const n = new Date();
+      return `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
+    }
+
+    function toBn(str) {
+      return String(str).replace(/[0-9]/g, d => EN_BN[d] || d);
+    }
+
+    function toEn(str) {
+      return String(str).replace(/[০-৯]/g, d => BN_EN[d] || d);
+    }
+
+    function formatBDT(amt) {
+      const n = Number(amt) || 0;
+      const s = n % 1 === 0 ? n.toLocaleString('en-IN') : n.toFixed(2);
+      return '৳' + (state.settings.useBengaliDigits ? toBn(s) : s);
+    }
+
+    function showToast(msg) {
+      const c = document.getElementById('toast-container');
+      const t = document.getElementById('toast-text');
+      t.textContent = msg;
+      c.classList.remove('hidden');
+      setTimeout(() => c.classList.add('hidden'), 3000);
+    }
+
+    // IndexedDB + LocalStorage Persistence
+    function saveState() {
+      try {
+        localStorage.setItem('hk_mobile_expenses', JSON.stringify(state.expenses));
+        localStorage.setItem('hk_mobile_categories', JSON.stringify(state.categories));
+        localStorage.setItem('hk_mobile_settings', JSON.stringify(state.settings));
+      } catch (e) {}
+      try {
+        if (window.indexedDB) {
+          const req = window.indexedDB.open('HisabKhataMobileDB', 1);
+          req.onupgradeneeded = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+          };
+          req.onsuccess = () => {
+            const db = req.result;
+            const tx = db.transaction('kv', 'readwrite');
+            tx.objectStore('kv').put(state.expenses, 'expenses');
+            tx.objectStore('kv').put(state.categories, 'categories');
+            tx.objectStore('kv').put(state.settings, 'settings');
+          };
+        }
+      } catch (e) {}
+    }
+
+    function loadState(cb) {
+      try {
+        const exp = JSON.parse(localStorage.getItem('hk_mobile_expenses') || '[]');
+        const cats = JSON.parse(localStorage.getItem('hk_mobile_categories') || 'null');
+        const set = JSON.parse(localStorage.getItem('hk_mobile_settings') || 'null');
+        if (Array.isArray(exp)) state.expenses = exp;
+        if (Array.isArray(cats) && cats.length) state.categories = cats;
+        if (set) state.settings = { ...state.settings, ...set };
+      } catch (e) {}
+      cb();
+    }
+
+    function switchView(viewName) {
+      state.activeView = viewName;
+      ['home', 'add', 'history', 'reports', 'settings'].forEach(v => {
+        const el = document.getElementById('view-' + v);
+        if (el) el.classList.toggle('hidden', v !== viewName);
+      });
+      document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+        const isAct = btn.getAttribute('data-nav') === viewName;
+        btn.className = 'nav-tab-btn flex flex-col items-center py-1 ' + (isAct ? 'text-emerald-600 font-bold' : 'text-slate-500');
+      });
+      renderAll();
+    }
+
+    function renderCategorySelects() {
+      const addSel = document.getElementById('input-category');
+      const histSel = document.getElementById('history-cat-filter');
+      const curAdd = addSel.value || 'খাবার';
+      const curHist = histSel.value || 'ALL';
+
+      addSel.innerHTML = state.categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+      addSel.value = state.categories.some(c => c.name === curAdd) ? curAdd : state.categories[0].name;
+
+      histSel.innerHTML = `<option value="ALL">সকল ক্যাটাগরি</option>` + state.categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+      histSel.value = curHist;
+    }
+
+    function renderAll() {
+      const today = getTodayISO();
+      const ym = today.slice(0, 7);
+      const yr = today.slice(0, 4);
+
+      document.getElementById('header-date').textContent = 'আজ: ' + today;
+      document.getElementById('dash-today-date').textContent = today;
+      document.getElementById('toggle-digit-btn').textContent = state.settings.useBengaliDigits ? '৳৩৫' : '৳35';
+
+      // Theme apply
+      const body = document.getElementById('app-body');
+      if (state.settings.darkMode) {
+        body.classList.add('bg-slate-950', 'text-slate-100');
+        body.classList.remove('bg-[#f8faf9]', 'text-slate-800');
+      } else {
+        body.classList.remove('bg-slate-950', 'text-slate-100');
+        body.classList.add('bg-[#f8faf9]', 'text-slate-800');
+      }
+
+      renderCategorySelects();
+
+      const sorted = [...state.expenses].sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
+      const todayList = sorted.filter(e => e.date === today);
+      const todayTotal = todayList.reduce((s, e) => s + Number(e.amount), 0);
+      const todayAvg = todayList.length ? todayTotal / todayList.length : 0;
+
+      const monthList = sorted.filter(e => e.date.startsWith(ym));
+      const monthTotal = monthList.reduce((s, e) => s + Number(e.amount), 0);
+      const monthDays = new Map();
+      monthList.forEach(e => monthDays.set(e.date, (monthDays.get(e.date) || 0) + Number(e.amount)));
+      const monthAvg = monthDays.size ? monthTotal / monthDays.size : 0;
+
+      let highDay = 0, lowDay = 0;
+      monthDays.forEach(v => {
+        if (v > highDay) highDay = v;
+        if (!lowDay || v < lowDay) lowDay = v;
+      });
+
+      const dObj = new Date(today + 'T00:00:00');
+      const wObj = new Date(dObj.getTime() - 6 * 86400000);
+      const wISO = `${wObj.getFullYear()}-${String(wObj.getMonth()+1).padStart(2,'0')}-${String(wObj.getDate()).padStart(2,'0')}`;
+      const weeklyTotal = sorted.filter(e => e.date >= wISO && e.date <= today).reduce((s, e) => s + Number(e.amount), 0);
+      const yearlyTotal = sorted.filter(e => e.date.startsWith(yr)).reduce((s, e) => s + Number(e.amount), 0);
+
+      document.getElementById('dash-today-total').textContent = formatBDT(todayTotal);
+      document.getElementById('dash-today-count').textContent = (state.settings.useBengaliDigits ? toBn(todayList.length) : todayList.length) + 'টি লেনদেন';
+      document.getElementById('dash-today-avg').textContent = formatBDT(todayAvg);
+
+      document.getElementById('dash-month-total').textContent = formatBDT(monthTotal);
+      document.getElementById('dash-month-count').textContent = (state.settings.useBengaliDigits ? toBn(monthList.length) : monthList.length) + 'টি লেনদেন';
+      document.getElementById('dash-month-avg').textContent = formatBDT(monthAvg);
+
+      document.getElementById('dash-weekly-total').textContent = formatBDT(weeklyTotal);
+      document.getElementById('dash-yearly-total').textContent = formatBDT(yearlyTotal);
+      document.getElementById('dash-high-day').textContent = formatBDT(highDay);
+      document.getElementById('dash-low-day').textContent = formatBDT(lowDay);
+
+      // Budget calculations
+      const bLimit = Number(state.settings.monthlyBudget) || 0;
+      const bPct = bLimit > 0 ? Math.round((monthTotal / bLimit) * 100) : 0;
+      const bRem = bLimit - monthTotal;
+      document.getElementById('dash-budget-limit').textContent = formatBDT(bLimit);
+      document.getElementById('dash-budget-spent').textContent = formatBDT(monthTotal);
+      document.getElementById('dash-budget-rem').textContent = formatBDT(bRem);
+      document.getElementById('dash-budget-percent').textContent = bPct + '% ব্যবহৃত';
+      const bBar = document.getElementById('dash-budget-bar');
+      bBar.style.width = Math.min(100, Math.max(0, bPct)) + '%';
+
+      const alertBanner = document.getElementById('budget-alert-banner');
+      if (bLimit > 0 && bPct >= 80) {
+        alertBanner.classList.remove('hidden');
+        if (bPct > 100) {
+          alertBanner.className = 'p-4 rounded-2xl border bg-rose-50 border-rose-200 text-rose-900 flex items-center justify-between gap-3';
+          document.getElementById('budget-alert-title').textContent = 'সতর্কবার্তা: মাসিক বাজেট অতিক্রম করেছে!';
+        } else {
+          alertBanner.className = 'p-4 rounded-2xl border bg-amber-50 border-amber-200 text-amber-900 flex items-center justify-between gap-3';
+          document.getElementById('budget-alert-title').textContent = 'সতর্কতা: মাসিক বাজেটের ৮০% ব্যবহৃত হয়েছে!';
+        }
+        document.getElementById('budget-alert-desc').textContent = `বাজেট: ${formatBDT(bLimit)} • খরচ: ${formatBDT(monthTotal)} (${bPct}%)`;
+      } else {
+        alertBanner.classList.add('hidden');
+      }
+
+      // Recent Transactions
+      const recEl = document.getElementById('recent-transactions-list');
+      if (sorted.length === 0) {
+        recEl.innerHTML = `<div class="py-8 text-center text-xs text-slate-400">এখনো কোনো খরচ যোগ করা হয়নি।</div>`;
+      } else {
+        recEl.innerHTML = sorted.slice(0, 10).map(e => `
+          <div class="py-3 flex items-center justify-between gap-2">
+            <div>
+              <div class="font-bold text-sm">${e.title}</div>
+              <div class="text-[11px] text-slate-400">${e.category} • ${e.date} • ${e.time}</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-sm text-emerald-700">${formatBDT(e.amount)}</span>
+              <button type="button" data-edit-id="${e.id}" class="edit-exp-btn px-2 py-1 rounded bg-emerald-50 text-emerald-700 text-xs">এডিট</button>
+              <button type="button" data-del-id="${e.id}" class="del-exp-btn px-2 py-1 rounded bg-rose-50 text-rose-600 text-xs">ডিলিট</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // History View
+      const q = (document.getElementById('history-search').value || '').trim().toLowerCase();
+      const catF = document.getElementById('history-cat-filter').value || 'ALL';
+      const dtF = document.getElementById('history-date-filter').value || '';
+
+      const filtered = sorted.filter(e => {
+        if (catF !== 'ALL' && e.category !== catF) return false;
+        if (dtF && e.date !== dtF) return false;
+        if (q && !e.title.toLowerCase().includes(q) && !(e.note || '').toLowerCase().includes(q)) return false;
+        return true;
+      });
+
+      const fTotal = filtered.reduce((s, e) => s + Number(e.amount), 0);
+      document.getElementById('history-total-count').textContent = filtered.length + 'টি লেনদেন';
+      document.getElementById('history-total-amount').textContent = 'মোট: ' + formatBDT(fTotal);
+
+      const groups = new Map();
+      filtered.forEach(e => {
+        if (!groups.has(e.date)) groups.set(e.date, { total: 0, items: [] });
+        const g = groups.get(e.date);
+        g.total += Number(e.amount);
+        g.items.push(e);
+      });
+
+      const histContainer = document.getElementById('daily-history-groups');
+      if (groups.size === 0) {
+        histContainer.innerHTML = `<div class="p-8 rounded-3xl bg-white border border-emerald-100 text-center text-xs text-slate-400">কোনো লেনদেন পাওয়া যায়নি।</div>`;
+      } else {
+        let html = '';
+        groups.forEach((g, date) => {
+          html += `
+            <div class="rounded-3xl bg-white border border-emerald-100 overflow-hidden shadow-sm card-surface">
+              <div class="px-4 py-3 bg-emerald-50/70 border-b border-emerald-100 flex items-center justify-between text-xs font-bold">
+                <span>📅 ${date} (${g.items.length}টি)</span>
+                <span class="text-emerald-700">Total: ${formatBDT(g.total)}</span>
+              </div>
+              <div class="divide-y divide-slate-100 px-4">
+                ${g.items.map(e => `
+                  <div class="py-3 flex items-center justify-between gap-2">
+                    <div>
+                      <div class="font-bold text-sm">${e.title} — ${formatBDT(e.amount)}</div>
+                      <div class="text-[11px] text-slate-400">${e.category} • ${e.time} ${e.note ? '• ' + e.note : ''}</div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                      <button type="button" data-edit-id="${e.id}" class="edit-exp-btn px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold">এডিট</button>
+                      <button type="button" data-del-id="${e.id}" class="del-exp-btn px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 text-xs font-semibold">ডিলিট</button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        });
+        histContainer.innerHTML = html;
+      }
+
+      // Reports View
+      const repPicker = document.getElementById('report-month-picker');
+      if (!repPicker.value) repPicker.value = ym;
+      const selMonth = repPicker.value || ym;
+      const repList = sorted.filter(e => e.date.startsWith(selMonth));
+      const repTotal = repList.reduce((s, e) => s + Number(e.amount), 0);
+
+      const repDays = new Map();
+      const repCats = new Map();
+      repList.forEach(e => {
+        repDays.set(e.date, (repDays.get(e.date) || 0) + Number(e.amount));
+        repCats.set(e.category, (repCats.get(e.category) || 0) + Number(e.amount));
+      });
+      const repAvg = repDays.size ? repTotal / repDays.size : 0;
+      let rHigh = 0, rLow = 0;
+      repDays.forEach(v => {
+        if (v > rHigh) rHigh = v;
+        if (!rLow || v < rLow) rLow = v;
+      });
+
+      document.getElementById('rep-total').textContent = formatBDT(repTotal);
+      document.getElementById('rep-avg').textContent = formatBDT(repAvg);
+      document.getElementById('rep-high').textContent = formatBDT(rHigh);
+      document.getElementById('rep-low').textContent = formatBDT(rLow);
+
+      const catBreakEl = document.getElementById('report-category-breakdown');
+      if (repCats.size === 0) {
+        catBreakEl.innerHTML = `<div class="text-xs text-slate-400 py-4 text-center">এই মাসে কোনো তথ্য নেই।</div>`;
+      } else {
+        let cHtml = '';
+        repCats.forEach((val, name) => {
+          const pct = repTotal > 0 ? Math.round((val / repTotal) * 100) : 0;
+          cHtml += `
+            <div class="flex items-center justify-between text-xs py-1.5 border-b border-slate-100">
+              <span class="font-bold">${name}</span>
+              <span class="font-bold text-emerald-700">${formatBDT(val)} (${pct}%)</span>
+            </div>
+          `;
+        });
+        catBreakEl.innerHTML = cHtml;
+      }
+
+      if (state.activeView === 'reports' && window.Chart) {
+        const catLabels = Array.from(repCats.keys());
+        const catVals = Array.from(repCats.values());
+        const dayLabels = Array.from(repDays.keys()).sort();
+        const dayVals = dayLabels.map(d => repDays.get(d));
+
+        if (pieChartInst) pieChartInst.destroy();
+        if (barChartInst) barChartInst.destroy();
+        if (lineChartInst) lineChartInst.destroy();
+
+        pieChartInst = new Chart(document.getElementById('pie-chart-canvas'), {
+          type: 'doughnut',
+          data: {
+            labels: catLabels.length ? catLabels : ['কোনো খরচ নেই'],
+            datasets: [{ data: catVals.length ? catVals : [1], backgroundColor: ['#10b981','#3b82f6','#8b5cf6','#f59e0b','#ec4899','#06b6d4','#f97316','#ef4444'] }]
+          },
+          options: { maintainAspectRatio: false }
+        });
+
+        barChartInst = new Chart(document.getElementById('bar-chart-canvas'), {
+          type: 'bar',
+          data: {
+            labels: dayLabels,
+            datasets: [{ label: 'দৈনিক খরচ (৳)', data: dayVals, backgroundColor: '#10b981', borderRadius: 6 }]
+          },
+          options: { maintainAspectRatio: false }
+        });
+
+        lineChartInst = new Chart(document.getElementById('line-chart-canvas'), {
+          type: 'line',
+          data: {
+            labels: dayLabels,
+            datasets: [{ label: 'খরচের ধারা (৳)', data: dayVals, borderColor: '#059669', backgroundColor: 'rgba(16,185,129,0.15)', fill: true, tension: 0.3 }]
+          },
+          options: { maintainAspectRatio: false }
+        });
+      }
+
+      // Settings Category List & Record Count
+      document.getElementById('settings-record-count').textContent = state.expenses.length + 'টি রেকর্ড';
+      document.getElementById('budget-input').value = state.settings.monthlyBudget;
+      const setCatEl = document.getElementById('settings-category-list');
+      setCatEl.innerHTML = state.categories.map(c => {
+        const tot = state.expenses.filter(e => e.category === c.name).reduce((s, e) => s + Number(e.amount), 0);
+        return `
+          <div class="p-2.5 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
+            <span><strong>${c.name}</strong> — ${formatBDT(tot)}</span>
+            ${c.isCustom ? `<button type="button" data-del-cat="${c.id}" class="del-cat-btn text-rose-600 font-bold">মুছুন</button>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Event Wiring
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('input-date').value = getTodayISO();
+      document.getElementById('input-time').value = getNowHHMM();
+
+      loadState(() => {
+        renderAll();
+      });
+
+      document.getElementById('toast-close-btn').addEventListener('click', () => {
+        document.getElementById('toast-container').classList.add('hidden');
+      });
+
+      // Nav buttons
+      document.querySelectorAll('.nav-tab-btn, .nav-jump-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchView(btn.getAttribute('data-nav')));
+      });
+
+      document.getElementById('quick-today-history-btn').addEventListener('click', () => {
+        document.getElementById('history-date-filter').value = getTodayISO();
+        switchView('history');
+      });
+
+      // Preset Chips
+      document.querySelectorAll('.preset-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          document.getElementById('input-title').value = chip.getAttribute('data-preset-title');
+          document.getElementById('input-amount').value = chip.getAttribute('data-preset-amt');
+          document.getElementById('input-category').value = chip.getAttribute('data-preset-cat');
+        });
+      });
+
+      // Add / Edit Expense Submit
+      document.getElementById('add-expense-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const errEl = document.getElementById('add-form-error');
+        errEl.classList.add('hidden');
+
+        const rawAmt = toEn(document.getElementById('input-amount').value || '');
+        const amt = parseFloat(rawAmt);
+        const title = (document.getElementById('input-title').value || '').trim();
+        const category = document.getElementById('input-category').value || 'অন্যান্য';
+        const date = document.getElementById('input-date').value || getTodayISO();
+        const time = document.getElementById('input-time').value || getNowHHMM();
+        const note = (document.getElementById('input-note').value || '').trim();
+        const editingId = document.getElementById('editing-expense-id').value;
+
+        if (!amt || amt <= 0 || !title) {
+          errEl.textContent = 'অনুগ্রহ করে সঠিক পরিমাণ (৳) এবং খরচের নাম লিখুন।';
+          errEl.classList.remove('hidden');
+          return;
+        }
+
+        if (editingId) {
+          state.expenses = state.expenses.map(item => item.id === editingId ? { ...item, amount: amt, title, category, date, time, note } : item);
+          document.getElementById('editing-expense-id').value = '';
+          document.getElementById('cancel-edit-btn').classList.add('hidden');
+          showToast(`হিসাব আপডেট হয়েছে: ${title} — ৳${amt}`);
+        } else {
+          state.expenses.unshift({
+            id: 'exp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+            amount: amt,
+            title,
+            category,
+            date,
+            time,
+            note
+          });
+          showToast(`সফলভাবে সংরক্ষিত: ${title} — ৳${amt}`);
+        }
+
+        document.getElementById('input-amount').value = '';
+        document.getElementById('input-title').value = '';
+        document.getElementById('input-note').value = '';
+        saveState();
+        renderAll();
+      });
+
+      document.getElementById('cancel-edit-btn').addEventListener('click', () => {
+        document.getElementById('editing-expense-id').value = '';
+        document.getElementById('input-amount').value = '';
+        document.getElementById('input-title').value = '';
+        document.getElementById('input-note').value = '';
+        document.getElementById('cancel-edit-btn').classList.add('hidden');
+      });
+
+      // Delegated Edit/Delete clicks
+      document.body.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.edit-exp-btn');
+        if (editBtn) {
+          const id = editBtn.getAttribute('data-edit-id');
+          const item = state.expenses.find(x => x.id === id);
+          if (item) {
+            document.getElementById('editing-expense-id').value = item.id;
+            document.getElementById('input-amount').value = item.amount;
+            document.getElementById('input-title').value = item.title;
+            document.getElementById('input-category').value = item.category;
+            document.getElementById('input-date').value = item.date;
+            document.getElementById('input-time').value = item.time;
+            document.getElementById('input-note').value = item.note || '';
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            switchView('add');
+          }
+          return;
+        }
+
+        const delBtn = e.target.closest('.del-exp-btn');
+        if (delBtn) {
+          const id = delBtn.getAttribute('data-del-id');
+          const item = state.expenses.find(x => x.id === id);
+          if (item) {
+            state.deletePendingAction = () => {
+              state.expenses = state.expenses.filter(x => x.id !== id);
+              saveState();
+              renderAll();
+              showToast('লেনদেনটি মুছে ফেলা হয়েছে।');
+            };
+            document.getElementById('delete-modal-title').textContent = 'হিসাবটি মুছে ফেলবেন?';
+            document.getElementById('delete-modal-desc').textContent = `${item.title} — ৳${item.amount} স্থায়ীভাবে মুছে যাবে।`;
+            document.getElementById('delete-modal').classList.remove('hidden');
+            document.getElementById('delete-modal').classList.add('flex');
+          }
+          return;
+        }
+
+        const delCatBtn = e.target.closest('.del-cat-btn');
+        if (delCatBtn) {
+          const cid = delCatBtn.getAttribute('data-del-cat');
+          state.categories = state.categories.filter(c => c.id !== cid);
+          saveState();
+          renderAll();
+          showToast('কাস্টম ক্যাটাগরি মুছে ফেলা হয়েছে।');
+        }
+      });
+
+      document.getElementById('delete-cancel-btn').addEventListener('click', () => {
+        document.getElementById('delete-modal').classList.add('hidden');
+        document.getElementById('delete-modal').classList.remove('flex');
+      });
+
+      document.getElementById('delete-confirm-btn').addEventListener('click', () => {
+        if (state.deletePendingAction) state.deletePendingAction();
+        state.deletePendingAction = null;
+        document.getElementById('delete-modal').classList.add('hidden');
+        document.getElementById('delete-modal').classList.remove('flex');
+      });
+
+      // Filters
+      ['history-search', 'history-cat-filter', 'history-date-filter', 'report-month-picker'].forEach(id => {
+        document.getElementById(id).addEventListener('input', renderAll);
+        document.getElementById(id).addEventListener('change', renderAll);
+      });
+
+      document.getElementById('history-reset-btn').addEventListener('click', () => {
+        document.getElementById('history-search').value = '';
+        document.getElementById('history-cat-filter').value = 'ALL';
+        document.getElementById('history-date-filter').value = '';
+        renderAll();
+      });
+
+      // Settings & Toggles
+      document.getElementById('toggle-digit-btn').addEventListener('click', () => {
+        state.settings.useBengaliDigits = !state.settings.useBengaliDigits;
+        saveState();
+        renderAll();
+      });
+
+      document.getElementById('toggle-theme-btn').addEventListener('click', () => {
+        state.settings.darkMode = !state.settings.darkMode;
+        saveState();
+        renderAll();
+      });
+
+      document.getElementById('budget-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const v = parseFloat(document.getElementById('budget-input').value || '0');
+        state.settings.monthlyBudget = v > 0 ? v : 0;
+        saveState();
+        renderAll();
+        showToast('মাসিক বাজেট সংরক্ষিত হয়েছে!');
+      });
+
+      document.getElementById('add-category-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = (document.getElementById('new-category-name').value || '').trim();
+        if (!name) return;
+        if (!state.categories.some(c => c.name === name)) {
+          state.categories.push({ id: 'cat-' + Date.now(), name, color: '#10b981', isCustom: true });
+          document.getElementById('new-category-name').value = '';
+          saveState();
+          renderAll();
+          showToast('নতুন ক্যাটাগরি যুক্ত হয়েছে!');
+        }
+      });
+
+      // Backup & Export
+      document.getElementById('export-csv-btn').addEventListener('click', () => {
+        const rows = [['ID','Date','Time','Title','Category','Amount','Note'], ...state.expenses.map(e => [e.id, e.date, e.time, e.title, e.category, e.amount, e.note || ''])];
+        const csv = '\uFEFF' + rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `HisabKhata_${getTodayISO()}.csv`;
+        a.click();
+        showToast('CSV ডাউনলোড সম্পন্ন!');
+      });
+
+      document.getElementById('export-json-btn').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `HisabKhata_Backup_${getTodayISO()}.json`;
+        a.click();
+        showToast('JSON ব্যাকআপ ডাউনলোড সম্পন্ন!');
+      });
+
+      document.getElementById('import-json-btn').addEventListener('click', () => {
+        document.getElementById('import-json-file').click();
+      });
+
+      document.getElementById('import-json-file').addEventListener('change', (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (!f) return;
+        const r = new FileReader();
+        r.onload = (ev) => {
+          try {
+            const data = JSON.parse(ev.target.result);
+            if (Array.isArray(data.expenses)) {
+              state.expenses = data.expenses;
+              if (Array.isArray(data.categories)) state.categories = data.categories;
+              saveState();
+              renderAll();
+              showToast('সফলভাবে ব্যাকআপ রিস্টোর হয়েছে!');
+            }
+          } catch (err) {
+            showToast('সঠিক JSON ফাইল নির্বাচন করুন।');
+          }
+        };
+        r.readAsText(f);
+      });
+
+      document.getElementById('clear-data-btn').addEventListener('click', () => {
+        state.deletePendingAction = () => {
+          state.expenses = [];
+          saveState();
+          renderAll();
+          showToast('সমস্ত লেনদেন মুছে ফেলা হয়েছে।');
+        };
+        document.getElementById('delete-modal-title').textContent = 'চূড়ান্ত নিশ্চিতকরণ: সব ডেটা মুছে ফেলবেন?';
+        document.getElementById('delete-modal-desc').textContent = 'আপনার সংরক্ষিত সকল হিসাব স্থায়ীভাবে মুছে যাবে।';
+        document.getElementById('delete-modal').classList.remove('hidden');
+        document.getElementById('delete-modal').classList.add('flex');
+      });
+
+      // APK & Install Guide Modal
+      document.getElementById('open-apk-modal-btn').addEventListener('click', () => {
+        document.getElementById('apk-modal').classList.remove('hidden');
+        document.getElementById('apk-modal').classList.add('flex');
+      });
+      document.getElementById('close-apk-modal-btn').addEventListener('click', () => {
+        document.getElementById('apk-modal').classList.add('hidden');
+        document.getElementById('apk-modal').classList.remove('flex');
+      });
+      document.getElementById('pwa-install-trigger-btn').addEventListener('click', async () => {
+        if (deferredInstallPrompt) {
+          deferredInstallPrompt.prompt();
+          await deferredInstallPrompt.userChoice;
+          deferredInstallPrompt = null;
+        } else {
+          showToast('Chrome ব্রাউজারের ডানদিকের (⋮) মেনু থেকে "Add to Home screen" নির্বাচন করুন!');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
